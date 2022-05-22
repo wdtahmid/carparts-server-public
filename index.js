@@ -1,21 +1,57 @@
 const express = require('express')
 const app = express()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 const port = process.env.PORT || 5000
 const cors = require('cors');
+require('dotenv').config()
 
 app.use(cors());
 app.use(express.json());
 
 
 
-const uri = `mongodb+srv://${process.env.DataBaseUser}:${process.env.MongoDataBasePass}@cluster0.pdmjf.mongodb.net/?retryWrites=true&w=majority`;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-client.connect(err => {
-    const collection = client.db("carParts").collection("parts");
-    console.log('Databvase connected successfully');
-    client.close();
-});
+const uri = `mongodb+srv://${process.env.USER}:${process.env.PASSWORD}@cluster0.pdmjf.mongodb.net/?retryWrites=true&w=majority`;
+const client = new MongoClient(uri);
+
+async function run() {
+    try {
+        await client.connect();
+        const partsCollection = client.db("carParts").collection("parts");
+
+        app.get('/parts', async (req, res) => {
+            const query = {};
+            const cursor = await partsCollection.find(query).toArray();
+            console.log(cursor);
+            res.send(cursor)
+        })
+        app.get('/purchase/parts/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const cursor = await partsCollection.findOne(query);
+            res.send(cursor)
+        })
+
+    } finally {
+        //await client.close();
+    }
+}
+run().catch(console.dir);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
