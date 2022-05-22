@@ -9,11 +9,11 @@ app.use(express.json());
 
 
 
-const uri = "mongodb+srv://carParts:<password>@cluster0.pdmjf.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DataBaseUser}:${process.env.MongoDataBasePass}@cluster0.pdmjf.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 client.connect(err => {
-    const collection = client.db("test").collection("devices");
-    // perform actions on the collection object
+    const collection = client.db("carParts").collection("parts");
+    console.log('Databvase connected successfully');
     client.close();
 });
 
