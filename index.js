@@ -21,6 +21,12 @@ async function run() {
         const reviewCollection = client.db("carParts").collection("reviews");
         const userCollection = client.db("carParts").collection("users");
 
+        app.get('/reviews', async (req, res) => {
+            const query = {};
+            const result = await reviewCollection.find(query).toArray();
+            res.send(result);
+        })
+
         app.get('/profileinfo', async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
