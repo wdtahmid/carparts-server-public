@@ -19,6 +19,22 @@ async function run() {
         const partsCollection = client.db("carParts").collection("parts");
         const orderCollection = client.db("carParts").collection("orders");
         const reviewCollection = client.db("carParts").collection("reviews");
+        const userCollection = client.db("carParts").collection("users");
+
+        app.put('/upsertuser', async (req, res) => {
+            const user = req.body;
+            const email = req.body.email;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    email: email
+                }
+            }
+            const result = await userCollection.insertOne(filter, updateDoc, options);
+            console.log(result);
+        })
+
 
         app.post('/addreview', async (req, res) => {
             const review = req.body;
