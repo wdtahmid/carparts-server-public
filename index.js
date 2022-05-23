@@ -34,6 +34,31 @@ async function run() {
             }
         }
 
+        app.get('/manageorders', async (req, res) => {
+            const email = req.query.email;
+            const query = {};
+            const result = await orderCollection.find(query).toArray();
+            console.log(result);
+            res.send(result);
+        })
+
+
+
+
+        app.get('/allusers', isAdmin, async (req, res) => {
+            const filter = {};
+            const user = await userCollection.find(filter).toArray();
+            res.send(user);
+        })
+
+        app.get('/user', async (req, res) => {
+            const email = req.query.email;
+            const filter = { email: email };
+            const user = await userCollection.findOne(filter);
+            res.send(user);
+        })
+
+
         app.get('/myorders', async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
