@@ -21,6 +21,25 @@ async function run() {
         const reviewCollection = client.db("carParts").collection("reviews");
         const userCollection = client.db("carParts").collection("users");
 
+        //checking for admin role
+        async function isAdmin(req, res, next) {
+            const email = req.query.email;
+            const filter = { email: email };
+            const user = await userCollection.findOne(filter);
+            if (user.role === 'admin') {
+                next()
+            }
+            else {
+                res.status(401).send({ message: 'Un Authorized access' })
+            }
+        }
+
+        app.get('/myorders', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const result = await orderCollection.find(query).toArray();
+            res.send(result);
+        })
         app.get('/reviews', async (req, res) => {
             const query = {};
             const result = await reviewCollection.find(query).toArray();
@@ -83,12 +102,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/myorders', async (req, res) => {
-            const email = req.query.email;
-            const query = { email: email };
-            const result = await orderCollection.find(query).toArray();
-            res.send(result);
-        })
+
 
         app.get('/parts', async (req, res) => {
             const query = {};
