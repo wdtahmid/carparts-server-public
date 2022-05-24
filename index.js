@@ -33,16 +33,23 @@ async function run() {
                 res.status(401).send({ message: 'Un Authorized access' })
             }
         }
-
+        app.post('/addproduct', isAdmin, async (req, res) => {
+            const parts = req.body;
+            const result = partsCollection.insertOne(parts);
+            res.send(result);
+        })
         app.get('/manageorders', async (req, res) => {
-            const email = req.query.email;
             const query = {};
             const result = await orderCollection.find(query).toArray();
-            console.log(result);
             res.send(result);
         })
 
 
+        app.get('/allproducts', isAdmin, async (req, res) => {
+            const filter = {};
+            const products = await partsCollection.find(filter).toArray();
+            res.send(products);
+        })
 
 
         app.get('/allusers', isAdmin, async (req, res) => {
