@@ -47,7 +47,21 @@ async function run() {
                 const adminUser = await userCollection.updateOne(query, updateDoc, options);
 
                 res.send(adminUser)
-                console.log(adminUser);
+            }
+        })
+        app.get('/removeadmin', isAdmin, async (req, res) => {
+            const userId = req.query.id;
+            const email = req.query.email;
+            const query = { _id: ObjectId(userId) };
+            const userSelected = await userCollection.findOne(query);
+            if (userSelected.role === 'admin') {
+                const options = { upsert: true };
+                const updateDoc = {
+                    $set: { role: ' ' }
+                }
+                const normalUser = await userCollection.updateOne(query, updateDoc, options);
+
+                res.send(normalUser)
             }
         })
 
@@ -112,7 +126,6 @@ async function run() {
                 $set: profile
             }
             const result = userCollection.updateOne(filter, updateDoc, options);
-            console.log(result);
         })
 
         app.put('/addtoprofile', async (req, res) => {
@@ -142,13 +155,11 @@ async function run() {
         app.post('/addreview', async (req, res) => {
             const review = req.body;
             const result = await reviewCollection.insertOne(review);
-            console.log(result);
             res.send(result)
         })
         app.post('/order', async (req, res) => {
             const order = req.body;
             const result = await orderCollection.insertOne(order);
-            console.log(result);
             res.send(result)
         })
 
@@ -157,7 +168,6 @@ async function run() {
         app.get('/parts', async (req, res) => {
             const query = {};
             const cursor = await partsCollection.find(query).toArray();
-            console.log(cursor);
             res.send(cursor)
         })
         app.get('/purchase/parts/:id', async (req, res) => {
