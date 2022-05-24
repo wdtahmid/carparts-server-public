@@ -33,6 +33,24 @@ async function run() {
                 res.status(401).send({ message: 'Un Authorized access' })
             }
         }
+
+        app.get('/makeadmin', isAdmin, async (req, res) => {
+            const userId = req.query.id;
+            const email = req.query.email;
+            const query = { _id: ObjectId(userId) };
+            const user = await userCollection.findOne(query);
+            if (user.role !== 'admin') {
+                const options = { upsert: true };
+                const updateDoc = {
+                    $set: { role: 'admin' }
+                }
+                const adminUser = await userCollection.updateOne(query, updateDoc, options);
+
+                res.send(adminUser)
+                console.log(adminUser);
+            }
+        })
+
         app.post('/addproduct', isAdmin, async (req, res) => {
             const parts = req.body;
             const result = partsCollection.insertOne(parts);
