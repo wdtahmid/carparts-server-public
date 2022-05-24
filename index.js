@@ -34,6 +34,17 @@ async function run() {
             }
         }
 
+        //API ror deleting the product
+        app.delete('/deleteproduct', isAdmin, async (req, res) => {
+            const productId = req.query.id;
+            const email = req.query.email;
+            const query = { _id: ObjectId(productId) };
+            const result = await partsCollection.deleteOne(query);
+            console.log(result);
+            res.send(result)
+
+        })
+
         app.get('/makeadmin', isAdmin, async (req, res) => {
             const userId = req.query.id;
             const email = req.query.email;
