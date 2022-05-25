@@ -23,6 +23,26 @@ async function run() {
         const reviewCollection = client.db("carParts").collection("reviews");
         const userCollection = client.db("carParts").collection("users");
 
+        //checking for admin role
+        async function isAdmin(req, res, next) {
+            const email = req.query.email;
+            const filter = { email: email };
+            const user = await userCollection.findOne(filter);
+            if (user.role === 'admin') {
+                next()
+            }
+            else {
+                res.status(401).send({ message: 'Unauthorized access' })
+            }
+        }
+        //JWT verification
+        function isToken(req, res, next) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
+                return res.status(401).send({ message: 'unauthrized access' })
+            }
+        }
+
         app.put('/paidorder/:id', async (req, res) => {
             const id = req.params.id;
             console.log(req.body);
@@ -53,19 +73,6 @@ async function run() {
             res.send({ clientSecret: paymentIntent.client_secret });
         });
 
-        //checking for admin role
-        async function isAdmin(req, res, next) {
-            const email = req.query.email;
-            const filter = { email: email };
-            const user = await userCollection.findOne(filter);
-            if (user.role === 'admin') {
-                next()
-            }
-            else {
-                res.status(401).send({ message: 'Unauthorized access' })
-            }
-        }
-
 
         app.delete('/deleteorder', async (req, res) => {
             const id = req.query.id;
@@ -80,7 +87,6 @@ async function run() {
             console.log(req.query);
             const query = { _id: ObjectId(id) };
             const result = await orderCollection.findOne(query);
-            console.log(result);
             res.send(result);
         })
 
@@ -133,7 +139,7 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/manageorders', isAdmin, async (req, res) => {
+        app.get('/manageorders', isToken, isAdmin, async (req, res) => {
             const query = {};
 
             const result = await orderCollection.find(query).toArray();
@@ -141,20 +147,20 @@ async function run() {
         })
 
 
-        app.get('/allproducts', isAdmin, async (req, res) => {
+        app.get('/allproducts', isToken, isAdmin, async (req, res) => {
             const filter = {};
             const products = await partsCollection.find(filter).toArray();
             res.send(products);
         })
 
 
-        app.get('/allusers', isAdmin, async (req, res) => {
+        app.get('/allusers', isToken, isAdmin, async (req, res) => {
             const filter = {};
             const user = await userCollection.find(filter).toArray();
             res.send(user);
         })
 
-        app.get('/user', isAdmin, async (req, res) => {
+        app.get('/user', isToken, isAdmin, async (req, res) => {
             const email = req.query.email;
             const filter = { email: email };
             const user = await userCollection.findOne(filter);
@@ -168,7 +174,7 @@ async function run() {
         })
 
 
-        app.get('/myorders', async (req, res) => {
+        app.get('/myorders', isToken, async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const result = await orderCollection.find(query).toArray();
@@ -180,7 +186,7 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/profileinfo', async (req, res) => {
+        app.get('/profileinfo', isToken, async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const result = await userCollection.find(query).toArray();
@@ -213,12 +219,16 @@ async function run() {
         app.put('/upsertuser', async (req, res) => {
             const user = req.body;
             const email = req.body.email;
+            const accessToken = jwt.sign({ email }, process.env.JWT_ACCESS_TOKEN, {
+                expiresIn: '1h'
+            });
             const filter = { email: email };
             const options = { upsert: true };
             const updateDoc = {
                 $set: user
             }
             const result = await userCollection.updateOne(filter, updateDoc, options);
+            res.send({ accessToken });
         })
 
 
