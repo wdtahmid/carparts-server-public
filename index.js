@@ -5,6 +5,7 @@ const port = process.env.PORT || 5000
 const cors = require('cors');
 require('dotenv').config()
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
+var jwt = require('jsonwebtoken');
 
 app.use(cors());
 app.use(express.json());
@@ -131,6 +132,7 @@ async function run() {
             const result = partsCollection.insertOne(parts);
             res.send(result);
         })
+
         app.get('/manageorders', isAdmin, async (req, res) => {
             const query = {};
 
@@ -152,7 +154,13 @@ async function run() {
             res.send(user);
         })
 
-        app.get('/user', async (req, res) => {
+        app.get('/user', isAdmin, async (req, res) => {
+            const email = req.query.email;
+            const filter = { email: email };
+            const user = await userCollection.findOne(filter);
+            res.send(user);
+        })
+        app.get('/getadmin', isAdmin, async (req, res) => {
             const email = req.query.email;
             const filter = { email: email };
             const user = await userCollection.findOne(filter);
