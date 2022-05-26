@@ -6,6 +6,8 @@ const cors = require('cors');
 require('dotenv').config()
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 var jwt = require('jsonwebtoken');
+const verify = require('jsonwebtoken/verify');
+const query = require('express/lib/middleware/query');
 
 app.use(cors());
 app.use(express.json());
@@ -22,6 +24,7 @@ async function run() {
         const orderCollection = client.db("carParts").collection("orders");
         const reviewCollection = client.db("carParts").collection("reviews");
         const userCollection = client.db("carParts").collection("users");
+        const blogCollection = client.db("carParts").collection("blogs");
 
         //checking for admin role
         async function isAdmin(req, res, next) {
@@ -41,6 +44,16 @@ async function run() {
             if (!authHeader) {
                 return res.status(401).send({ message: 'unauthrized access' })
             }
+
+            const token = authHeader.split(' ')[1];
+            jwt.verify(token, process.env.JWT_ACCESS_TOKEN, (err, decoded) => {
+                if (err) {
+                    res.status(403).send({ message: 'Access forbidden' });
+                }
+                console.log(decoded);
+                req.decoded = decoded;
+            })
+            next();
         }
 
         app.put('/paidorder/:id', async (req, res) => {
@@ -139,33 +152,33 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/manageorders', isToken, isAdmin, async (req, res) => {
+        app.get('/manageorders', isAdmin, async (req, res) => {
             const query = {};
-
             const result = await orderCollection.find(query).toArray();
             res.send(result);
         })
 
 
-        app.get('/allproducts', isToken, isAdmin, async (req, res) => {
+        app.get('/allproducts', isAdmin, async (req, res) => {
             const filter = {};
             const products = await partsCollection.find(filter).toArray();
             res.send(products);
         })
 
 
-        app.get('/allusers', isToken, isAdmin, async (req, res) => {
+        app.get('/allusers', isAdmin, async (req, res) => {
             const filter = {};
             const user = await userCollection.find(filter).toArray();
             res.send(user);
         })
 
-        app.get('/user', isToken, isAdmin, async (req, res) => {
+        app.get('/user', async (req, res) => {
             const email = req.query.email;
             const filter = { email: email };
             const user = await userCollection.findOne(filter);
             res.send(user);
         })
+
         app.get('/getadmin', isAdmin, async (req, res) => {
             const email = req.query.email;
             const filter = { email: email };
@@ -174,7 +187,7 @@ async function run() {
         })
 
 
-        app.get('/myorders', isToken, async (req, res) => {
+        app.get('/myorders', async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const result = await orderCollection.find(query).toArray();
@@ -186,12 +199,13 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/profileinfo', isToken, async (req, res) => {
+        app.get('/profileinfo', async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const result = await userCollection.find(query).toArray();
             res.send(result);
         })
+
         app.put('/updateprofile', async (req, res) => {
             const profile = req.body;
             const email = req.query.email;
@@ -255,6 +269,20 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const cursor = await partsCollection.findOne(query);
             res.send(cursor)
+        })
+
+        app.get('/blogs', async (req, res) => {
+            const result = await blogCollection.find({}).toArray();
+            console.log(result);
+            res.send(result);
+        })
+        app.get('/blogs/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = { _id: ObjectId(id) }
+            const result = await blogCollection.findOne(query);
+            console.log(result);
+            res.send(result);
         })
 
     } finally {
