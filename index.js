@@ -87,11 +87,17 @@ async function run() {
         });
 
 
-        app.delete('/deleteorder', async (req, res) => {
+        app.put('/shifteorder', async (req, res) => {
             const id = req.query.id;
             const query = { _id: ObjectId(id) };
-            const result = await orderCollection.deleteOne(query);
-            res.send(result);
+            const options = { upsert: true }
+            // const result = await orderCollection.findOne(query);
+            const updateDoc = {
+                $set: { shift: true }
+            }
+            const updated = orderCollection.updateOne(query, updateDoc, options);
+            console.log(updated);
+            res.send(updated);
         })
 
         //for payment route
